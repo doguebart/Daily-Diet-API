@@ -11,11 +11,27 @@ export const usersRoutes = async (app: FastifyInstance) => {
 
     const { name } = createUserBodySchema.parse(req.body);
 
+    if (!name) {
+      return reply.status(400).send("Field name is missing!");
+    }
+
+    let sessionId = req.cookies.sessionId;
+
+    if (!sessionId) {
+      sessionId = randomUUID();
+
+      reply.cookie("sessionId", sessionId, {
+        path: "/",
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+      });
+    }
+
     await knex("users").insert({
       id: randomUUID(),
       name,
+      session_id: sessionId,
     });
 
-    return reply.status(201).send("User created");
+    return reply.status(201).send();
   });
 };
