@@ -92,9 +92,7 @@ export const mealsRoutes = async (app: FastifyInstance) => {
       .where({ user_id: req.user?.id })
       .orderBy("date", "desc");
 
-    return reply.status(200).send({
-      meals,
-    });
+    return reply.status(200).send(meals);
   });
 
   app.get(

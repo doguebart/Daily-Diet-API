@@ -3,7 +3,7 @@ import { app } from "../app";
 import request from "supertest";
 import { execSync } from "node:child_process";
 
-describe("Create User test", async () => {
+describe("Create User test", () => {
   beforeAll(async () => {
     await app.ready();
   });
@@ -12,14 +12,14 @@ describe("Create User test", async () => {
     await app.close();
   });
 
-  beforeEach(async () => {
+  beforeEach(() => {
     execSync("npm run knex migrate:rollback --all");
     execSync("npm run knex migrate:latest");
   });
 
   it("Should be able to create a new user.", async () => {
     await request(app.server)
-      .post("/users")
+      .post("/users/")
       .send({
         name: "John Doe",
         email: "johndoe@example.com",
