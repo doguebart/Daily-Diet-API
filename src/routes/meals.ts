@@ -86,4 +86,14 @@ export const mealsRoutes = async (app: FastifyInstance) => {
       return reply.status(204).send();
     }
   );
+
+  app.get("/", { preHandler: [checkSessionIdExists] }, async (req, reply) => {
+    const meals = await knex("meals")
+      .where({ user_id: req.user?.id })
+      .orderBy("date", "desc");
+
+    return reply.status(200).send({
+      meals,
+    });
+  });
 };
