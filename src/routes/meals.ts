@@ -36,4 +36,54 @@ export const mealsRoutes = async (app: FastifyInstance) => {
 
     return reply.status(201).send();
   });
+
+  app.put(
+    "/:mealId",
+    { preHandler: [checkSessionIdExists] },
+    async (req, reply) => {
+      const updateMealParamsSchema = z.object({
+        mealId: z
+          .string({
+            message: "Meal ID is missing.",
+          })
+          .uuid(),
+      });
+
+      const { mealId } = updateMealParamsSchema.parse(req.params);
+
+      const updateMealBodySchema = z.object({
+        name: z.string({
+          message: "Meal name is missing.",
+        }),
+        description: z.string({
+          message: "Meal description is missing.",
+        }),
+        isOnDiet: z.boolean({
+          message: "Tell us if this meal is inside your diet or not.",
+        }),
+        date: z.coerce.date({
+          message: "Date & time is missing.",
+        }),
+      });
+
+      const { name, description, isOnDiet, date } = updateMealBodySchema.parse(
+        req.body
+      );
+
+      const meal = await knex("meals").where({ id: mealId }).first();
+
+      if (!meal) {
+        return reply.status(404).send("Meal not found.");
+      }
+
+      await knex("meals").where({ id: mealId }).update({
+        name,
+        description,
+        isOnDiet,
+        date: date.getTime(),
+      });
+
+      return reply.status(204).send();
+    }
+  );
 };
