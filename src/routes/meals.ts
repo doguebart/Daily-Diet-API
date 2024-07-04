@@ -101,7 +101,7 @@ export const mealsRoutes = async (app: FastifyInstance) => {
     "/:mealId",
     { preHandler: [checkSessionIdExists] },
     async (req, reply) => {
-      const updateMealParamsSchema = z.object({
+      const getMealByIdParamsSchema = z.object({
         mealId: z
           .string({
             message: "Meal ID is missing.",
@@ -109,7 +109,15 @@ export const mealsRoutes = async (app: FastifyInstance) => {
           .uuid(),
       });
 
-      const { mealId } = updateMealParamsSchema.parse(req.params);
+      const { mealId } = getMealByIdParamsSchema.parse(req.params);
+
+      const checkIfMealExists = await knex("meals")
+        .where({ id: mealId })
+        .first();
+
+      if (!checkIfMealExists) {
+        return reply.status(404).send("Meal not found.");
+      }
 
       const meal = await knex("meals")
         .where({
@@ -119,6 +127,37 @@ export const mealsRoutes = async (app: FastifyInstance) => {
         .first();
 
       return reply.status(200).send(meal);
+    }
+  );
+
+  app.delete(
+    "/:mealId",
+    { preHandler: [checkSessionIdExists] },
+    async (req, reply) => {
+      const deleteMealByIdParamsSchema = z.object({
+        mealId: z.string({
+          message: "Meal ID is missing.",
+        }),
+      });
+
+      const { mealId } = deleteMealByIdParamsSchema.parse(req.params);
+
+      const checkIfMealExists = await knex("meals")
+        .where({ id: mealId })
+        .first();
+
+      if (!checkIfMealExists) {
+        return reply.status(404).send("Meal not found.");
+      }
+
+      await knex("meals")
+        .where({
+          id: mealId,
+          user_id: req.user?.id,
+        })
+        .delete();
+
+      return reply.status(204).send();
     }
   );
 };
