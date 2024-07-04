@@ -96,4 +96,29 @@ export const mealsRoutes = async (app: FastifyInstance) => {
       meals,
     });
   });
+
+  app.get(
+    "/:mealId",
+    { preHandler: [checkSessionIdExists] },
+    async (req, reply) => {
+      const updateMealParamsSchema = z.object({
+        mealId: z
+          .string({
+            message: "Meal ID is missing.",
+          })
+          .uuid(),
+      });
+
+      const { mealId } = updateMealParamsSchema.parse(req.params);
+
+      const meal = await knex("meals")
+        .where({
+          id: mealId,
+          user_id: req.user?.id,
+        })
+        .first();
+
+      return reply.status(200).send(meal);
+    }
+  );
 };
