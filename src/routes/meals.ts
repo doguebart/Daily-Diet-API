@@ -160,4 +160,30 @@ export const mealsRoutes = async (app: FastifyInstance) => {
       return reply.status(204).send();
     }
   );
+
+  app.get(
+    "/metrics",
+    { preHandler: [checkSessionIdExists] },
+    async (req, reply) => {
+      const totalMeals = await knex("meals").where({
+        user_id: req.user?.id,
+      });
+
+      const onDietMeals = await knex("meals").where({
+        isOnDiet: true,
+        user_id: req.user?.id,
+      });
+
+      const outOfDietMeals = await knex("meals").where({
+        isOnDiet: false,
+        user_id: req.user?.id,
+      });
+
+      return reply.status(200).send({
+        totalMeals: totalMeals.length,
+        onDietMeals: onDietMeals.length,
+        outOfDietMeals: outOfDietMeals.length,
+      });
+    }
+  );
 };
