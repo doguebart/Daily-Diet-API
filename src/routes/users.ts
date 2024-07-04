@@ -7,13 +7,8 @@ export const usersRoutes = async (app: FastifyInstance) => {
   app.post("/", async (req, reply) => {
     const createUserBodySchema = z.object({
       name: z.string(),
+      email: z.string().email(),
     });
-
-    const { name } = createUserBodySchema.parse(req.body);
-
-    if (!name) {
-      return reply.status(400).send("Field name is missing!");
-    }
 
     let sessionId = req.cookies.sessionId;
 
@@ -26,9 +21,26 @@ export const usersRoutes = async (app: FastifyInstance) => {
       });
     }
 
+    const { name, email } = createUserBodySchema.parse(req.body);
+
+    if (!name) {
+      return reply.status(400).send("Field name is missing!");
+    }
+
+    if (!email) {
+      return reply.status(400).send("Field e-mail is missing!");
+    }
+
+    const checkIfUserExists = await knex("users").where({ email }).first();
+
+    if (checkIfUserExists) {
+      return reply.status(400).send("User already exists.");
+    }
+
     await knex("users").insert({
       id: randomUUID(),
       name,
+      email,
       session_id: sessionId,
     });
 
